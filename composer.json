@@ -7,12 +7,12 @@
     "authors": [
         {
             "name": "hail",
-            "email": "ovidiupop@163.com"
+            "email": "ovidiupop70@gmail.com"
         }
     ],
     "require": {
-        "yiisoft/yii2": "~2.0.0",
-        "yiisoft/yii2-bootstrap4": "~2.0.8"
+        "yiisoft/yii2": "~2.2",
+        "yiisoft/yii2-bootstrap4": "~2.0.10"
     },
     "autoload": {
         "psr-4": {
