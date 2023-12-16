@@ -1,15 +1,33 @@
 <?php
 namespace ovidiupop\adminlte\widgets;
-
 use yii\base\ErrorException;
-use yii\bootstrap4\Widget;
+
+/**
+ * Alert widget renders a message from session flash. All flash messages are displayed
+ * in the sequence they were assigned using setFlash. You can set message as following:
+ *
+ *  Simple message without title
+ * ```php
+ * \Yii::$app->session->setFlash('error', 'This is the message');
+ * \Yii::$app->session->setFlash('success', 'This is the message');
+ * \Yii::$app->session->setFlash('info', 'This is the message');
+ * ```
+ *
+ * Message with title:
+ *
+ * ```php
+ * \Yii::$app->session->setFlash('error', ['message'=>'This is the message', 'title'=>'This is title');
+ * \Yii::$app->session->setFlash('info', ['message'=>'This is the message', 'title'=>'This is title');
+ * \Yii::$app->session->setFlash('success', ['message'=>'This is the message', 'title'=>'This is title');
+ *
+ */
 
 /**
  * Class Alert
- * @package ovidiupop\adminlte\widgets
  */
-class Alert extends Widget
+class Alert extends \yii\bootstrap\Widget
 {
+
     public $alertTypes = [
         'danger' => [
             'class' => 'alert-danger',
@@ -36,61 +54,58 @@ class Alert extends Widget
     ];
 
     public $type;
+    public $title;
 
-    public $title = 'Alert!';
-
-    public $icon;
-
-    /**
-     * @var string the body content in the alert component.
-     */
-    public $body;
-
-    /**
-     * @var bool whether or not the body has the head
-     */
     public $simple = false;
 
     /**
-     * @var array|false the options for rendering the close button tag.
-     *
-     * The following special options are supported:
-     *
-     * - tag: string, the tag name of the button. Defaults to 'button'.
-     * - label: string, the label of the button. Defaults to '&times;'.
-     *
-     * The rest of the options will be rendered as the HTML attributes of the button tag.
+     * @var array the options for rendering the close button tag.
      */
     public $closeButton = [];
 
+    /**
+     * @throws \Exception
+     */
     public function init()
     {
         parent::init();
+        $session = \Yii::$app->session;
+        $flashes = $session->getAllFlashes();
 
-        if (is_null($this->type)) {
-            $this->type = 'info';
-        }
-        if (!isset($this->alertTypes[$this->type])) {
-            throw new ErrorException('unsupported type: '.$this->type);
-        }
-    }
+        foreach ($flashes as $type => $data) {
+            $this->type = $type;
+            if (!array_key_exists($type, $this->alertTypes)){
+                $this->type = 'info';
+            }
 
-    public function run()
-    {
-        $head = '';
-        if (!$this->simple) {
-            $icon = $this->icon ?? $this->alertTypes[$this->type]['icon'] ?? null;
-            $iconHtml = $icon ? '<i class="icon fas '.$icon.'"></i>' : '';
-            $head = '<h5>'.$iconHtml.' '.$this->title.'</h5>';
-        }
+            if(is_string($data)){
+                $message = $data;
+                $this->title = false;
+                $this->simple = true;
+            }
+            if(is_array($data)){
+                $message = $data['message'];
+                $this->title = $data['title'];
+                $this->simple = false;
+            }
 
-        echo \yii\bootstrap4\Alert::widget([
-            'body' => $head.$this->body,
-            'closeButton' => $this->closeButton,
-            'options' => [
-                'id' => $this->getId().'-'.$this->type,
-                'class' => $this->alertTypes[$this->type]['class']
-            ]
-        ]);
+            $head = '';
+
+            if (!$this->simple) {
+                $icon = $this->icon ?? $this->alertTypes[$this->type]['icon'] ?? null;
+                $iconHtml = $icon ? '<i class="icon fas '.$icon.'"></i>' : '';
+                $head = '<h5>'.$iconHtml.' '.$this->title.'</h5>';
+            }
+
+            echo \yii\bootstrap4\Alert::widget([
+                'body' => $head.$message,
+                'closeButton' => $this->closeButton,
+                'options' => [
+                    'id' => $this->getId().'-'.$this->type,
+                    'class' => $this->alertTypes[$this->type]['class']
+                ]
+            ]);
+            $session->removeFlash($type);
+        }
     }
 }
